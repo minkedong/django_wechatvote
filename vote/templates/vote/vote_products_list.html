@@ -1,0 +1,138 @@
+{% extends "vote/vote_base.html" %}
+
+{% block content %}
+<div class="vote_ranking_list" style="background-color: gainsboro;">
+    <div style="width: 100%;height: 20px;"></div>
+    <div class="vote_ranking_list_title">
+        <img class="vote_ranking_list_title_img" src="{{STATIC_URL}}vote/img/ranking_list.png"/>
+    </div>
+    <div class="vote_ranking_list_search_box">
+        <input id="vote_ranking_list_search_input" class="vote_ranking_list_search_input" type="text"
+               placeholder="输入编号"/>
+        <button id="vote_ranking_list_search_button" class="vote_ranking_list_search_button">搜索</button>
+    </div>
+    <div class="row" id="ranking_list_row"></div>
+    <script type="text/template" id="ranking_list">
+        <%for(var i=0;i < data.objects.length;i++){%>
+
+        <div class="col-50">
+            <a href="/vote/product/index/<%=data.objects[i].rid%>" style="color: black;width: 100%;height: 160px;">
+                <div class="vote_ranking_list_img" style="background-image: url(<%=data.objects[i].image%>)">
+                    <div style="position: absolute;right: 5px;top: 5px;"><%=data.objects[i].up_user_name%></div>
+                </div>
+            </a>
+            <div class="vote_ranking_list_info">
+                <div class="vote_ranking_list_identifier">编号：<%=data.objects[i].slug%></div>
+                <div class="vote_ranking_list_bollet">票数：<%=data.objects[i].vote_count%>票</div>
+            </div>
+
+        </div>
+
+        <%}%>
+    </script>
+
+    <script type="text/template" id="ranking_list_rid">
+
+        <div class="col col-50">
+            <a href="/vote/product/index/<%=data.objects[0].rid%>" style="color: black;">
+                <div class="vote_ranking_list_img" style="background-image: url(<%=data.objects[0].image%>)">
+                    <div style="position: absolute;right: 5px;top: 5px;"><%=data.objects[0].up_user_name%></div>
+                </div>
+            </a>
+            <div class="vote_ranking_list_info">
+                <div class="vote_ranking_list_identifier">编号：<%=data.objects[0].slug%></div>
+                <div class="vote_ranking_list_bollet">票数：<%=data.objects[0].vote_count%>票</div>
+            </div>
+
+        </div>
+
+    </script>
+
+</div>
+{% endblock %}
+
+{% block addjs %}
+<script type="text/javascript">
+    $(document).ready(function(){
+        $.ajax({
+            url: '/api/v1/vote/productbrief/?format=json',
+            dataType: 'json',
+            data: 'order_by=-vote_count&order_by=-create_date&activity_id={{activity.id}}',
+            type: 'GET',
+            success: function (data) {
+                var response = data;
+                var bt = baidu.template;
+                var html = bt('ranking_list', data);
+                document.getElementById('ranking_list_row').innerHTML = html;
+                scrollbottom(response);
+                ranking_list_search(data);
+            }
+        });
+    });
+    function ranking_list_search() {
+        $('#vote_ranking_list_search_button').click(function () {
+            var search_slug = document.getElementById('vote_ranking_list_search_input').value;
+            if(search_slug==''){
+                return false;
+            }else{
+            document.getElementById('ranking_list_row').innerHTML = '';
+            $.ajax({
+                url: '/api/v1/vote/productbrief/?format=json',
+                data: 'activity_id={{activity.id}}&id=' + search_slug,
+                dataType: 'json',
+                type: 'GET',
+                success: function (data) {
+                    console.log(data);
+                    var bt = baidu.template;
+                    var html_rid = bt('ranking_list_rid', data);
+                    document.getElementById('ranking_list_row').innerHTML = html_rid;
+                }
+            });
+            }
+        });
+    }
+
+
+     $('#vote_ranking_list_search_input').change(function () {
+         if (document.getElementById('vote_ranking_list_search_input').value == '') {
+             $.ajax({
+                 url: '/api/v1/vote/productbrief/?format=json',
+                 data: 'order_by=-vote_count&order_by=-create_date&activity_id={{activity.id}}',
+                 dataType: 'json',
+                 type: 'GET',
+                 success: function (data) {
+                     var bt = baidu.template;
+                     var html = bt('ranking_list', data);
+                     document.getElementById('ranking_list_row').innerHTML = html;
+                     ranking_list_search(data);
+                 }
+             })
+         }
+     })
+
+    //下拉加载
+    function scrollbottom(response) {
+        $(document).scroll(function () {
+            var a = document.documentElement.scrollTop == 0 ? document.body.clientHeight : document.documentElement.clientHeight;
+            var b = document.documentElement.scrollTop == 0 ? document.body.scrollTop : document.documentElement.scrollTop;
+            var c = document.documentElement.scrollTop == 0 ? document.body.scrollHeight : document.documentElement.scrollHeight;
+
+            if (a + b == c) {
+                $.ajax({
+                    url: '/api/v1/vote/productbrief/?limit=20&format=json&offset=' + response.objects.length,
+                    dataType: 'json',
+                    data: 'order_by=-vote_count&order_by=-create_date&activity_id={{activity.id}}',
+                    type: 'GET',
+                    success: function (data) {
+                        Array.prototype.push.apply(response.objects, data.objects);
+                        data = response;
+                        var bt = baidu.template;
+                        var html = bt('ranking_list', data);
+                        document.getElementById('ranking_list_row').innerHTML = html;
+                    }
+                })
+            }
+        })
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "vote/vote_base.html" %}
+
+
+{% block content %}
+<div class="index_vote">
+    <div class="vote_bgimg" style="background-image: url({{activity.background_image.image.url}})"></div>
+    <div class="vote_index_button_div">
+        <a href="/vote/product/createform/{{activity.id}}/">
+            <img src="{{STATIC_URL}}vote/img/partake.png" />
+        </a>
+        <a href="/vote/products/list/{{activity.id}}/">
+            <img src="{{STATIC_URL}}vote/img/ranking.png" />
+        </a>
+    </div>
+</div>
+<img src="{{activity.detailinfo_image.image.url}}" style="width: 100%; display: block" />
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "vote/vote_base.html" %}
+
+{% block content %}
+<div class="vote_partake" style="background-color: gainsboro;">
+    <div style="height: 3%;"></div>
+    <div id="vote_partake_photo_div" class="vote_partake_photo_div">
+        上传照片
+        <img id="preview"/>
+    </div>
+    <input type="file" name="image" id="product_image" style="display: none"/>
+
+    <input type="text" placeholder="昵称" id="up_user_name"/>
+    <input type="tel" placeholder="手机号码" id="up_user_mobile"/>
+    <div id="confirmation_text" style="width:200px;font-size: 12px; color: red; margin: 10px auto 10px auto;">
+        请输入正确的手机号码
+    </div>
+    <textarea placeholder="图片说明" id="content"></textarea>
+    <div id="loading_GIF" style="background-color: rgba(220,220,220,0.8); width: 100%;position: absolute;left: 0;top: 0;z-index: 999;height: 100%;display: none;">
+        <img src="{{STATIC_URL}}vote/img/loading.gif" style="width: 30%; position: absolute;top: 50%; margin-top: -25%;left: 35%;"/>
+    </div>
+    <div class="vote_partake_next_div" id="product_sub">
+        <img src="{{STATIC_URL}}vote/img/next.png"/>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block addjs %}
+<script type="text/javascript">
+
+    $(document).ready(function (e) {
+        $('#confirmation_text').hide();
+        var HEIGHT = $('body').height();
+        $(window).resize(function () {
+            $('body').height(HEIGHT);
+        });
+
+        $('#vote_partake_photo_div').click(function (e) {
+            $('#product_image').click();
+        })
+        $("#product_image").change(function () {
+            var $file = $(this);
+            var fileObj = $file[0];
+            var windowURL = window.URL || window.webkitURL;
+            var dataURL;
+            var $img = $("#preview");
+            if (fileObj && fileObj.files && fileObj.files[0]) {
+                dataURL = windowURL.createObjectURL(fileObj.files[0]);
+                var filename = fileObj.files[0].name;
+                console.log(filename);
+                $img.attr('src', dataURL);
+            }
+        });
+
+        $('#product_sub').click(function () {
+            var fileobj = document.getElementById('product_image').files[0];
+            console.log(fileobj)
+            // var src = window.URL.createObjectURL(fileobj);
+            // $('.user-icon img').attr('src', src);
+            var data = new FormData();
+            var user_name = document.getElementById('up_user_name').value;
+            var user_mobile = document.getElementById('up_user_mobile').value;
+            var content = document.getElementById('content').value;
+            var phone = $("#up_user_mobile").val();
+            console.log(JSON.stringify({'image':fileobj,'up_user_mobile':user_mobile,'up_user_name':user_name,'content':content,'activity_id':'{{activity.id}}'}));
+            if (document.getElementById('product_image').value == '') {
+                alert('请传入一张图片！');
+                return false;
+            } else if (document.getElementById('up_user_name').value == '') {
+                alert('请输入昵称！');
+                return false;
+            } else if (document.getElementById('up_user_mobile').value == '') {
+                alert('请输入手机号码！');
+                return false;
+            }
+            if (/^1\d{10}$/.test(phone)) {
+                $('#confirmation_text').hide();
+            } else {
+                $('#confirmation_text').show();
+                return false;
+            }
+            data.append('image', fileobj);
+            data.append('activity_id', '{{activity.id}}');
+            data.append('up_user_name', user_name);
+            data.append('up_user_mobile', user_mobile);
+            data.append('content', content);
+            data.append('csrfmiddlewaretoken', '{{csrf_token}}');
+            $.ajax({
+                url:'/api/v1/vote/createproduct/',
+                type:'POST',
+                data:data,
+                contentType:false,
+                processData:false,
+                beforeSend: function() {
+                    $('#loading_GIF').show();
+                },
+                success:function(result){
+                    console.log(result);
+                    if (result.status == 0) {
+                        location.href="/vote/product/index/" + result.product_id;
+                    } else {
+                        alert(result.message);
+                    }
+                    $('#loading_GIF').hide();
+                },
+                error:function(){
+                    alert(1)
+                }
+            })
+        });
+        $("#up_user_mobile").bind("input propertychange", function () {
+            var phone = $("#up_user_mobile").val();
+            if (/^1\d{10}$/.test(phone)) {
+                $('#confirmation_text').hide();
+            } else {
+                $('#confirmation_text').show();
+            }
+        });
+    });
+</script>
+{% endblock %}

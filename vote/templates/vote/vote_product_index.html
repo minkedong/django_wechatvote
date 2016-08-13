@@ -1,0 +1,87 @@
+{% extends "vote/vote_base.html" %}
+
+
+{% block wx-content %}
+    <div style="display:none;">
+        <div class="wx-title">{{product.up_user_name}}</div>
+        <div class="wx-desc">{{product.content}}</div>
+        <img class="wx-imgUrl" src="{{product.image_first_url}}" />
+        <div class="wx-linkurl">{% autoescape off %}{{linkurl}}{% endautoescape %}</div>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="vote_partake_detail" style="background-color: gainsboro;">
+    <!--<div style="width: 100%; height: 100%; background-color: gainsboro; position: absolute;left: 0;top: 0;z-index: 999;">-->
+        <!--<img src="{{product.image_first_url}}" style="width: 100%;">-->
+    <!--</div>-->
+    <div id="lead_div" style="width: 100%; height: 100%;background-color: black;opacity: 0.7;position: absolute;top: 0;left: 0;z-index: 999;overflow: hidden;" hidden>
+        <img src="{{STATIC_URL}}vote/img/share_icon.png" style="width: 60%;float: right;" />
+    </div>
+    <div style="width: 100%;height: 30px;"></div>
+    <div class="vote_partake_name">{{product.up_user_name}}</div>
+    <div style="width: 80%; margin: 3% auto 1% auto;overflow:hidden;">
+        <div class="vote_partake_identifier">编号：{{product.slug}}</div>
+        <div class="vote_partake_bollet">票数：<span id="product_vote_count">{{product.vote_count}}</span>票</div>
+    </div>
+    <div class="vote_partake_img">
+        <img style="width: 100%;" src="{{product.image_first_url}}" />
+    </div>
+    <div class="vote_partake_img_introduction">
+        {{product.content}}
+    </div>
+    <div style="width: 100%;height: 120px;"></div>
+    {% if is_self %}
+        <div class="vote_partake_button_div">
+            <img id="vote_share_img" src="{{STATIC_URL}}vote/img/share.png" />
+            <a href="/vote/products/list/{{product.activity_id_id}}/">
+                <img src="{{STATIC_URL}}vote/img/ranking.png" />
+            </a>
+        </div>
+    {% else %}
+        <div class="vote_partake_button_div">
+            <!--<div id="vote_sub" class="vote_button_div" style="background-image: url({{STATIC_URL}}vote/img/vote_bg.png)">投票</div>-->
+            <a id="vote_sub">
+                <img src="{{STATIC_URL}}vote/img/vote.png" />
+            </a>
+            <a href="/vote/products/list/{{product.activity_id_id}}/">
+                <img src="{{STATIC_URL}}vote/img/ranking.png" />
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block addjs %}
+<script type="text/javascript">
+    $(document).ready(function(event){
+        $('#vote_sub').click(function(e){
+            $.ajax({
+                url: '/api/v1/vote/submit/',
+                method: 'POST',
+                data: JSON.stringify({'product_id':'{{product.id}}'}),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.setRequestHeader('X-CSRFToken', '{{csrf_token}}');
+                },
+                success: function(data){
+                    console.log(data);
+                    // document.getElementById('vote_sub').innerText='已投票';
+                    if(data.status == 0){
+                        document.getElementById('product_vote_count').innerText=Number(document.getElementById('product_vote_count').innerText)+1;
+                    }else{
+                        alert(data.message)
+                    }
+                    
+                },
+            });
+        });
+        $('#vote_share_img').click(function(){
+            $('#lead_div').fadeIn();
+        });
+        $('#lead_div').click(function(){
+            $('#lead_div').fadeOut();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,4 @@
+include README.md
+recursive-include vote/templates *
+recursive-include vote/static *
+exclude *.pyc
