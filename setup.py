@@ -17,7 +17,7 @@ NAME = "django_wechatvote"
 
 PACKAGES = find_packages()
 
-REQUIRES = ['Django==1.8.2', 'requests', 'wechat-sdk', 'django-tastypie==0.12.2', 'qiniu', 'Pillow']
+REQUIRES = ['Django==1.11.23', 'requests', 'wechat-sdk', 'django-tastypie==0.12.2', 'qiniu', 'Pillow']
 
 DESCRIPTION = "this is a package for django wechat vote"
 
